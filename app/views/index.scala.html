@@ -3,9 +3,10 @@
 @main("Ticket Overlords") {
 
 	<p>
-	    You want to go see a show? There are 
+	    You want to go see a show? There 
+		@{if (ticketsAvailable != 1) "are" else "is"} 
     	@{ticketsAvailable}
-    	tickets available!
+    	ticket@{if (ticketsAvailable!= 1) "s"} available!
 	</p>
 
 }
