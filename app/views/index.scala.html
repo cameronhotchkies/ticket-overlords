@@ -1,7 +1,11 @@
-@(message: String)
+@(ticketsAvailable: Int)
 
-@main("Welcome to Play") {
+@main("Ticket Overlords") {
 
-    @play20.welcome(message)
+	<p>
+	    You want to go see a show? There are 
+    	@{ticketsAvailable}
+    	tickets available!
+	</p>
 
 }
