@@ -1,12 +1,32 @@
-@(ticketsAvailable: Int)
+@()
 
-@main("Ticket Overlords") {
+@main("Ticket Overlord") {
+    <script type="text/javascript">
+        // TODO: connect to ticketsAvailable endpoint
+        callTicketsAvailableAsync()
+            .onSuccess(function(result) {
+                var qty = result.ticketQuantity;
+                
+                // Set the pluralization of the result
+                var areVsIs = 'are ';
+                var plural = 's';
+                if (qty === 1) {
+                    areVsIs = 'is ';
+                    plural = '';
+                }
+                
+                // Build the result string
+                var display = 'There ' + areVsIs + 
+                    qty + ' ticket' + 
+                    plural + ' available!';
+                // TODO: Write display var to ticketsAvailable span
+            }).onFailure(function(err) {
+                var errorText = 'There was an error';
+                // TODO: Write errorText to ticketsAvailable span
+            });
+    </script>
 
-	<p>
-	    You want to go see a show? There 
-		@{if (ticketsAvailable != 1) "are" else "is"} 
-    	@{ticketsAvailable}
-    	ticket@{if (ticketsAvailable!= 1) "s"} available!
-	</p>
+    You want to go see a show?
+    <span id="ticketsAvailable"></span>
 
 }
