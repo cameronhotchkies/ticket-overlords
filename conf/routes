@@ -10,3 +10,6 @@ GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 # API route for available tickets
 GET     /tickets/available/         controllers.Tickets.ticketsAvailable
+
+# Javascript Router
+GET     /jsr/                       controllers.Application.jsRoutes
