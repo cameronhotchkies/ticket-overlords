@@ -2,6 +2,7 @@ package controllers
 
 import play.api._
 import play.api.mvc._
+import play.api.routing.JavaScriptReverseRouter
 
 object Application extends Controller {
 
@@ -11,7 +12,7 @@ object Application extends Controller {
 
   def jsRoutes = Action { implicit request =>
     Ok(
-      Routes.javascriptRouter("jsRoutes")(
+      JavaScriptReverseRouter("jsRoutes")(
         routes.javascript.Tickets.ticketsAvailable
       )
     )
