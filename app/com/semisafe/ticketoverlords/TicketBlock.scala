@@ -1,6 +1,7 @@
 package com.semisafe.ticketoverlords
 
 import org.joda.time.DateTime
+import play.api.libs.json.{ Json, Format }
 
 case class TicketBlock(
   id: Option[Long],
@@ -11,3 +12,7 @@ case class TicketBlock(
   initialSize: Int,
   saleStart: DateTime,
   saleEnd: DateTime)
+  
+object TicketBlock {
+  implicit val format: Format[TicketBlock] = Json.format[TicketBlock]
+}
