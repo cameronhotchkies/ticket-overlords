@@ -1,6 +1,6 @@
 package controllers.responses
 
-import play.api.libs.json.{ Json, Format }
+import play.api.libs.json.{ Json, Format, JsValue }
 
 case class ErrorResult(status: Int, message: String)
 
@@ -10,7 +10,7 @@ object ErrorResult {
 
 case class EndpointResponse(
   result: String,
-  response: Option[Any],
+  response: JsValue,
   error: Option[ErrorResult])
 
 object EndpointResponse {
