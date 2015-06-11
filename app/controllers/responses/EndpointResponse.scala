@@ -1,6 +1,6 @@
 package controllers.responses
 
-import play.api.libs.json.{ Json, Format, JsValue, JsNull }
+import play.api.libs.json.{ Json, Format, JsValue, JsNull, Writes }
 
 case class ErrorResult(status: Int, message: String)
 
@@ -24,7 +24,7 @@ object ErrorResponse {
 }
 
 object SuccessResponse {
-  def apply(successResponse: JsValue) = {
-    EndpointResponse("ok", successResponse, None)
+  def apply[A](successResponse: A)(implicit w: Writes[A]) = {
+    EndpointResponse("ok", Json.toJson(successResponse), None)
   }
 }
