@@ -8,10 +8,10 @@ scalaVersion := "2.11.1"
 
 libraryDependencies ++= Seq(
   specs2 % Test,
-  jdbc,
   cache,
   ws,
-  "org.webjars" % "jquery" % "2.1.3"
+  "org.webjars" % "jquery" % "2.1.3",
+  "com.typesafe.play" %% "play-slick-evolutions" % "1.0.0"
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
