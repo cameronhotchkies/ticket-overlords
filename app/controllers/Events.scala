@@ -21,13 +21,19 @@ object Events extends Controller {
     }
   }
 
-  def create = Action { request =>
-    // parse from json post body
-    val incomingEvent: Event = ???
+  def create = Action(parse.json) { request =>
+    val incomingBody = request.body.validate[Event]
 
-    // save event and get a copy back
-    val createdEvent: Event = ???
+    incomingBody.fold(error => {
+      val errorMessage = s"Invalid JSON: ${error}"
+      val response = ErrorResponse(ErrorResponse.INVALID_JSON, errorMessage)
+      BadRequest(Json.toJson(response))
+    }, { event =>
+      // save event and get a copy back
+      val createdEvent: Event = ???
 
-    Created(Json.toJson(SuccessResponse(createdEvent)))
+      Created(Json.toJson(SuccessResponse(createdEvent)))
+    })
   }
+
 }
