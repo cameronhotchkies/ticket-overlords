@@ -13,3 +13,13 @@ GET     /tickets/available/         controllers.Tickets.ticketsAvailable
 
 # Javascript Router
 GET     /jsr/                       controllers.Application.jsRoutes
+
+# Event Resource
+POST    /events/                    controllers.Events.create
+GET     /events/                    controllers.Events.list
+GET     /events/:eventID/           controllers.Events.getByID(eventID: Long)
+
+# Ticket Block Resource
+POST    /tickets/blocks/            controllers.TicketBlocks.create
+GET     /tickets/blocks/            controllers.TicketBlocks.list
+GET     /tickets/blocks/:blockID/   controllers.TicketBlocks.getByID(blockID: Long)
