@@ -10,6 +10,7 @@ import play.api.db.DBApi
 import SlickMapping.jodaDateTimeMapping
 import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.Logger
 
 case class TicketBlock(
   id: Option[Long],
@@ -79,6 +80,7 @@ object TicketBlock {
       tb => tb.initialSize - orders.sum
     }
 
+    Logger.info("Query: " + quantityLeft.result.headOption.statements)
     val queryResult = db.run(quantityLeft.result.headOption)
 
     queryResult.map { _.flatten.getOrElse(0) }
