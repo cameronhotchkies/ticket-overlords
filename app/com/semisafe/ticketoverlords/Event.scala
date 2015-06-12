@@ -8,6 +8,8 @@ import slick.driver.JdbcProfile
 import play.api.Play.current
 import play.api.db.DBApi
 
+import SlickMapping.jodaDateTimeMapping
+
 case class Event(
   id: Option[Long],
   name: String,
