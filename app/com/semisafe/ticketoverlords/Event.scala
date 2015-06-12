@@ -44,7 +44,10 @@ object Event {
 
   val table = TableQuery[EventsTable]
 
-  def list: Seq[Event] = { ??? }
+  def list: Seq[Event] = {
+    val eventList = table.result
+    db.run(eventList)
+  }
 
   def getByID(eventID: Long): Option[Event] = { ??? }
 
