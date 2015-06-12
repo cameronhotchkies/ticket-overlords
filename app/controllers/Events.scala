@@ -9,7 +9,7 @@ import com.semisafe.ticketoverlords.Event
 import controllers.responses._
 
 object Events extends Controller {
-  def list = Action { request =>
+  def list = Action.async { request =>
     val eventFuture: Future[Seq[Event]] = Event.list
 
     val response = eventFuture.map { events =>
