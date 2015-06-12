@@ -54,9 +54,17 @@ object Event {
     val eventByID = table.filter { f =>
       f.id === eventID
     }.result.headOption
-   
+
     db.run(eventByID)
   }
 
-  def create(event: Event): Event = { ??? }
+  def create(newEvent: Event): Future[Event] = {
+    val insertion = (table returning table.map(_.id)) += newEvent
+
+    val insertedIDFuture = db.run(insertion)
+
+    val createdCopy: Future[Event] = ???
+
+    createdCopy
+  }
 }
