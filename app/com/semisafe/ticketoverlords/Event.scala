@@ -50,7 +50,13 @@ object Event {
     db.run(eventList)
   }
 
-  def getByID(eventID: Long): Option[Event] = { ??? }
+  def getByID(eventID: Long): Future[Option[Event]] = {
+    val eventByID = table.filter { f =>
+      f.id === eventID
+    }.result.headOption
+   
+    db.run(eventByID)
+  }
 
   def create(event: Event): Event = { ??? }
 }
