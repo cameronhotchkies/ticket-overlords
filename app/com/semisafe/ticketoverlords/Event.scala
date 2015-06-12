@@ -38,7 +38,8 @@ object Event {
     def state = column[String]("STATE")
     def country = column[String]("COUNTRY")
 
-    def * = ???
+    def * = (id.?, name, start, end, address, city, state, country) <>
+      ((Event.apply _).tupled, Event.unapply)
   }
 
   val table = TableQuery[EventsTable]
