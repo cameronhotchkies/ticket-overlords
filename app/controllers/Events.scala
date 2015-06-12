@@ -2,14 +2,21 @@ package controllers
 
 import play.api.mvc._
 import play.api.libs.json.Json
+import scala.concurrent.Future
+import play.api.libs.concurrent.Execution.Implicits._
 
 import com.semisafe.ticketoverlords.Event
 import controllers.responses._
 
 object Events extends Controller {
   def list = Action { request =>
-    val events: Seq[Event] = ???
-    Ok(Json.toJson(SuccessResponse(events)))
+    val eventFuture: Future[Seq[Event]] = Event.list
+
+    val response = eventFuture.map { events =>
+      Ok(Json.toJson(SuccessResponse(events)))
+    }
+
+    response
   }
 
   def getByID(eventID: Long) = Action { request =>
