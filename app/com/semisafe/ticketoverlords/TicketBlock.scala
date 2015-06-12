@@ -67,4 +67,20 @@ object TicketBlock {
       newTicketBlock.copy(id = Option(resultID))
     }
   }
+
+  def availability(ticketBlockID: Long): Future[Int] = {
+    val orders = for {
+      o <- Order.table if o.ticketBlockID === ticketBlockID
+    } yield o.ticketQuantity
+
+    val quantityLeft = table.filter {
+      _.id === ticketBlockID
+    }.map {
+      tb => tb.initialSize - orders.sum
+    }
+
+    val queryResult = db.run(quantityLeft.result.headOption)
+
+    queryResult.map { _.flatten.getOrElse(0) }
+  }
 }
