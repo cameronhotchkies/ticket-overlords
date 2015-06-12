@@ -23,3 +23,8 @@ GET     /events/:eventID/           controllers.Events.getByID(eventID: Long)
 POST    /tickets/blocks/            controllers.TicketBlocks.create
 GET     /tickets/blocks/            controllers.TicketBlocks.list
 GET     /tickets/blocks/:blockID/   controllers.TicketBlocks.getByID(blockID: Long)
+
+# Order Resource
+POST    /orders/              		controllers.Orders.create
+GET     /orders/              		controllers.Orders.list
+GET     /orders/:orderID/     		controllers.Orders.getByID(orderID: Long)
