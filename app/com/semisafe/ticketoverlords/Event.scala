@@ -7,6 +7,7 @@ import play.api.db.slick.DatabaseConfigProvider
 import slick.driver.JdbcProfile
 import play.api.Play.current
 import play.api.db.DBApi
+import scala.concurrent.Future
 
 import SlickMapping.jodaDateTimeMapping
 
@@ -44,7 +45,7 @@ object Event {
 
   val table = TableQuery[EventsTable]
 
-  def list: Seq[Event] = {
+  def list: Future[Seq[Event]] = {
     val eventList = table.result
     db.run(eventList)
   }
