@@ -3,37 +3,47 @@ package controllers
 import play.api.mvc._
 import play.api.libs.json.Json
 
+import scala.concurrent.Future
+import play.api.libs.concurrent.Execution.Implicits._
+
 import com.semisafe.ticketoverlords.TicketBlock
 import controllers.responses._
 
 object TicketBlocks extends Controller {
-    def list = Action { request =>
-    val ticketBlocks: Seq[TicketBlock] = ???
-    Ok(Json.toJson(SuccessResponse(ticketBlocks)))
-  }
+  def list = Action.async { request =>
+    val ticketBlocks: Future[Seq[TicketBlock]] = TicketBlock.list
 
-  def getByID(ticketBlockID: Long) = Action { request =>
-    val ticketBlock: Option[TicketBlock] = ???
-
-    ticketBlock.fold {
-      NotFound(Json.toJson(ErrorResponse(NOT_FOUND, "No ticket block found")))
-    } { tb =>
-      Ok(Json.toJson(SuccessResponse(tb)))
+    ticketBlocks.map { tbs =>
+      Ok(Json.toJson(SuccessResponse(tbs)))
     }
   }
 
-  def create = Action(parse.json) { request =>
+  def getByID(ticketBlockID: Long) = Action.async { request =>
+    val ticketBlockFuture: Future[Option[TicketBlock]] = TicketBlock.getByID(ticketBlockID)
+
+    ticketBlockFuture.map { ticketBlock =>
+      ticketBlock.fold {
+        NotFound(Json.toJson(ErrorResponse(NOT_FOUND, "No ticket block found")))
+      } { tb =>
+        Ok(Json.toJson(SuccessResponse(tb)))
+      }
+    }
+  }
+
+  def create = Action.async(parse.json) { request =>
     val incomingBody = request.body.validate[TicketBlock]
 
     incomingBody.fold(error => {
       val errorMessage = s"Invalid JSON: ${error}"
       val response = ErrorResponse(ErrorResponse.INVALID_JSON, errorMessage)
-      BadRequest(Json.toJson(response))
+      Future.successful(BadRequest(Json.toJson(response)))
     }, { ticketBlock =>
       // save ticket block and get a copy back
-      val createdBlock: TicketBlock = ???
+      val createdBlock: Future[TicketBlock] = TicketBlock.create(ticketBlock)
 
-      Created(Json.toJson(SuccessResponse(createdBlock)))
+      createdBlock.map { cb =>
+        Created(Json.toJson(SuccessResponse(cb)))
+      }
     })
   }
 }
