@@ -70,19 +70,16 @@ object TicketBlock {
   }
 
   def availability(ticketBlockID: Long): Future[Int] = {
-    val orders = for {
-      o <- Order.table if o.ticketBlockID === ticketBlockID
-    } yield o.ticketQuantity
+    db.run {
+    val query = sql"""
+     select INITIAL_SIZE - COALESCE(SUM(TICKET_QUANTITY), 0)
+     from TICKET_BLOCKS tb
+     left join ORDERS o on o.TICKET_BLOCK_ID=tb.ID
+     where tb.ID=${ticketBlockID}
+     group by INITIAL_SIZE;
+     """.as[Int]
 
-    val quantityLeft = table.filter {
-      _.id === ticketBlockID
-    }.map {
-      tb => tb.initialSize - orders.sum
-    }
-
-    Logger.info("Query: " + quantityLeft.result.headOption.statements)
-    val queryResult = db.run(quantityLeft.result.headOption)
-
-    queryResult.map { _.flatten.getOrElse(0) }
+     query.headOption
+    }.map { _.getOrElse(0) }
   }
 }
