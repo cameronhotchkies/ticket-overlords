@@ -8,6 +8,7 @@ import slick.driver.JdbcProfile
 import play.api.Play.current
 import play.api.db.DBApi
 import scala.concurrent.Future
+import play.api.libs.concurrent.Execution.Implicits._
 
 import SlickMapping.jodaDateTimeMapping
 
@@ -63,7 +64,9 @@ object Event {
 
     val insertedIDFuture = db.run(insertion)
 
-    val createdCopy: Future[Event] = ???
+    val createdCopy: Future[Event] = insertedIDFuture.map { resultID =>
+      newEvent.copy(id = Option(resultID))
+    }
 
     createdCopy
   }
