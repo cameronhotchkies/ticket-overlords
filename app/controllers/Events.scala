@@ -19,28 +19,34 @@ object Events extends Controller {
     response
   }
 
-  def getByID(eventID: Long) = Action { request =>
-    val event: Option[Event] = ???
-    event.fold {
-      NotFound(Json.toJson(ErrorResponse(NOT_FOUND, "No event found")))
-    } { e =>
-      Ok(Json.toJson(SuccessResponse(e)))
+  def getByID(eventID: Long) = Action.async { request =>
+    val eventFuture: Future[Option[Event]] = Event.getByID(eventID)
+
+    eventFuture.map { event =>
+      event.fold {
+        NotFound(Json.toJson(ErrorResponse(NOT_FOUND, "No event found")))
+      } { e =>
+        Ok(Json.toJson(SuccessResponse(e)))
+      }
     }
   }
 
-  def create = Action(parse.json) { request =>
+  def create = Action.async(parse.json) { request =>
     val incomingBody = request.body.validate[Event]
 
     incomingBody.fold(error => {
       val errorMessage = s"Invalid JSON: ${error}"
       val response = ErrorResponse(ErrorResponse.INVALID_JSON, errorMessage)
-      BadRequest(Json.toJson(response))
+      Future.successful(BadRequest(Json.toJson(response)))
     }, { event =>
       // save event and get a copy back
-      val createdEvent: Event = ???
+      val createdEventFuture: Future[Event] = Event.create(event)
 
-      Created(Json.toJson(SuccessResponse(createdEvent)))
+      createdEventFuture.map { createdEvent =>
+        Created(Json.toJson(SuccessResponse(createdEvent)))
+      }
+
     })
   }
-
 }
+
