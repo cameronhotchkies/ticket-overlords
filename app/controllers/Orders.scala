@@ -5,7 +5,7 @@ import play.api.libs.json.Json
 import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
 
-import com.semisafe.ticketoverlords.Order
+import com.semisafe.ticketoverlords.{ Order, TicketBlock }
 import controllers.responses._
 
 object Orders extends Controller {
@@ -36,11 +36,27 @@ object Orders extends Controller {
       val response = ErrorResponse(ErrorResponse.INVALID_JSON, errorMessage)
       Future.successful(BadRequest(Json.toJson(response)))
     }, { order =>
-      // save order and get a copy back
-      val createdOrder = Order.create(order)
 
-      createdOrder.map { co =>
-        Created(Json.toJson(SuccessResponse(co)))
+      val availFuture = TicketBlock.availability(order.ticketBlockID)
+
+      availFuture.flatMap { availability =>
+        if (availability >= order.ticketQuantity) {
+          // save order and get a copy back
+          val createdOrder = Order.create(order)
+
+          createdOrder.map { co =>
+            Created(Json.toJson(SuccessResponse(co)))
+          }
+        } else {
+          val responseMessage = "There are not enough tickets remaining to complete this order." +
+            s" Quantity Remaining: ${availability}"
+
+          val response = ErrorResponse(
+            ErrorResponse.NOT_ENOUGH_TICKETS,
+            responseMessage)
+
+          Future.successful(BadRequest(Json.toJson(response)))
+        }
       }
     })
   }
