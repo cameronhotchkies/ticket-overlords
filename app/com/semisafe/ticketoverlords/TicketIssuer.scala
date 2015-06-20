@@ -34,30 +34,14 @@ class TicketIssuer extends Actor {
   }
 
   def placeOrder(order: Order) {
-    // This is important!!
-    val origin = sender
+    val workerRef = workers.get(order.ticketBlockID)
 
-    // Get available quantity as a future
-    val availabilityResult = TicketBlock.availability(order.ticketBlockID)
-
-    availabilityResult.map { availability =>
-      // Compare to order amount
-      if (availability >= order.ticketQuantity) {
-        // place order
-        val createdOrderResult: Future[Order] = Order.create(order)
-
-        createdOrderResult.map { createdOrder =>
-          // send completed order back to originator
-          origin ! createdOrder
-        }
-      } else {
-        // if not possible send a failure result
-        val failureResponse = InsufficientTicketsAvailable(
-          order.ticketBlockID,
-          availability)
-
-        origin ! ActorFailure(failureResponse)
-      }
+    workerRef.fold {
+      // We need a new type of error here if the ActorRef does
+      // not exist, or has not yet been initialized
+      ???
+    } { worker =>
+      worker forward order
     }
   }
 
