@@ -51,7 +51,7 @@ object Orders extends Controller {
       Future.successful(BadRequest(Json.toJson(response)))
     }, { order =>
       implicit val timeout = Timeout(5.seconds)
-      val orderFuture = issuer ? order
+      val orderFuture = (issuer ? order).mapTo[Order]
 
       // Convert successful future to Json
 
