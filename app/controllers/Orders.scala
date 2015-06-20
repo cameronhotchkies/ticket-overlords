@@ -17,6 +17,9 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 
+import com.semisafe.ticketoverlords.InsufficientTicketsAvailable
+import play.api.Logger
+
 object Orders extends Controller {
 
   val issuer = Akka.system.actorOf(
@@ -58,9 +61,30 @@ object Orders extends Controller {
       val orderFuture = (issuer ? order).mapTo[Order]
 
       // Convert successful future to Json
-      orderFuture.map { createdOrder =>
-        Ok(Json.toJson(SuccessResponse(createdOrder)))
-      }
+      orderFuture.map {
+        createdOrder => Ok(Json.toJson(SuccessResponse(createdOrder)))
+      }.recover({
+        case ita: InsufficientTicketsAvailable => {
+          val responseMessage =
+            "There are not enough tickets remaining to complete this order." +
+              s" Quantity Remaining: ${ita.ticketsAvailable}"
+
+          val response = ErrorResponse(
+            ErrorResponse.NOT_ENOUGH_TICKETS,
+            responseMessage)
+
+          BadRequest(Json.toJson(response))
+        }
+        case unexpected => {
+          Logger.error(
+            s"Unexpected error while placing an order: ${unexpected.toString}")
+          val response = ErrorResponse(
+            INTERNAL_SERVER_ERROR,
+            "An unexpected error occurred")
+
+          InternalServerError(Json.toJson(response))
+        }
+      })
     })
   }
 }
