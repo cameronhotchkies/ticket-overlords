@@ -10,6 +10,9 @@ case class InsufficientTicketsAvailable(
   ticketBlockID: Long,
   ticketsAvailable: Int) extends Throwable
 
+case class TicketBlockUnavailable(
+  ticketBlockID: Long) extends Throwable
+
 class TicketIssuer extends Actor {
 
   var workers = Map[Long, ActorRef]()
