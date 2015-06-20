@@ -2,6 +2,10 @@ package com.semisafe.ticketoverlords
 
 import akka.actor.Actor
 
+case class InsufficientTicketsAvailable(
+  ticketBlockID: Long,
+  ticketsAvailable: Int) extends Throwable
+
 class TicketIssuer extends Actor {
 
   def placeOrder(order: Order) {
