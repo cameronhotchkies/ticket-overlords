@@ -40,9 +40,7 @@ class TicketIssuer extends Actor {
     val workerRef = workers.get(order.ticketBlockID)
 
     workerRef.fold {
-      // We need a new type of error here if the ActorRef does
-      // not exist, or has not yet been initialized
-      ???
+      sender ! ActorFailure(TicketBlockUnavailable(order.ticketBlockID))
     } { worker =>
       worker forward order
     }
