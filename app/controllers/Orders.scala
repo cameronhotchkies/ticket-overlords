@@ -8,7 +8,17 @@ import play.api.libs.concurrent.Execution.Implicits._
 import com.semisafe.ticketoverlords.{ Order, TicketBlock }
 import controllers.responses._
 
+import play.api.libs.concurrent.Akka
+import play.api.Play.current
+import com.semisafe.ticketoverlords.TicketIssuer
+import akka.actor.Props
+
 object Orders extends Controller {
+
+  val issuer = Akka.system.actorOf(
+    Props[TicketIssuer],
+    name = "ticketIssuer")
+
   def list = Action.async { request =>
     val orders = Order.list
     orders.map { o =>
