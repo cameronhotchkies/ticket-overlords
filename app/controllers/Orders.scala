@@ -18,6 +18,7 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 
 import com.semisafe.ticketoverlords.InsufficientTicketsAvailable
+import com.semisafe.ticketoverlords.TicketBlockUnavailable
 import play.api.Logger
 
 object Orders extends Controller {
@@ -61,8 +62,8 @@ object Orders extends Controller {
       val orderFuture = (issuer ? order).mapTo[Order]
 
       // Convert successful future to Json
-      orderFuture.map {
-        createdOrder => Ok(Json.toJson(SuccessResponse(createdOrder)))
+      orderFuture.map { createdOrder =>
+        Ok(Json.toJson(SuccessResponse(createdOrder)))
       }.recover({
         case ita: InsufficientTicketsAvailable => {
           val responseMessage =
@@ -71,6 +72,15 @@ object Orders extends Controller {
 
           val response = ErrorResponse(
             ErrorResponse.NOT_ENOUGH_TICKETS,
+            responseMessage)
+
+          BadRequest(Json.toJson(response))
+        }
+        case tba: TicketBlockUnavailable => {
+          val responseMessage =
+            s"Ticket Block ${order.ticketBlockID} is not available."
+          val response = ErrorResponse(
+            ErrorResponse.TICKET_BLOCK_UNAVAILABLE,
             responseMessage)
 
           BadRequest(Json.toJson(response))

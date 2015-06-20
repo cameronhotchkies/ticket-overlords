@@ -18,10 +18,11 @@ object EndpointResponse {
 }
 
 object ErrorResponse {
-  
+
   val INVALID_JSON = 1000
   val NOT_ENOUGH_TICKETS = 1001
-  
+  val TICKET_BLOCK_UNAVAILABLE = 1002
+
   def apply(status: Int, message: String) = {
     EndpointResponse("ko", JsNull, Option(ErrorResult(status, message)))
   }
