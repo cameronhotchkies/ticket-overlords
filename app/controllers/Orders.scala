@@ -13,6 +13,10 @@ import play.api.Play.current
 import com.semisafe.ticketoverlords.TicketIssuer
 import akka.actor.Props
 
+import akka.pattern.ask
+import akka.util.Timeout
+import scala.concurrent.duration._
+
 object Orders extends Controller {
 
   val issuer = Akka.system.actorOf(
@@ -46,28 +50,12 @@ object Orders extends Controller {
       val response = ErrorResponse(ErrorResponse.INVALID_JSON, errorMessage)
       Future.successful(BadRequest(Json.toJson(response)))
     }, { order =>
+      implicit val timeout = Timeout(5.seconds)
+      val orderFuture = issuer ? order
 
-      val availFuture = TicketBlock.availability(order.ticketBlockID)
+      // Convert successful future to Json
 
-      availFuture.flatMap { availability =>
-        if (availability >= order.ticketQuantity) {
-          // save order and get a copy back
-          val createdOrder = Order.create(order)
-
-          createdOrder.map { co =>
-            Created(Json.toJson(SuccessResponse(co)))
-          }
-        } else {
-          val responseMessage = "There are not enough tickets remaining to complete this order." +
-            s" Quantity Remaining: ${availability}"
-
-          val response = ErrorResponse(
-            ErrorResponse.NOT_ENOUGH_TICKETS,
-            responseMessage)
-
-          Future.successful(BadRequest(Json.toJson(response)))
-        }
-      }
+      ???
     })
   }
 }
