@@ -54,12 +54,13 @@ object Orders extends Controller {
       val configuredTimeout = current.configuration.getInt(timeoutKey)
       val resolvedTimeout = configuredTimeout.getOrElse(5)
       implicit val timeout = Timeout(resolvedTimeout.seconds)
-      
+
       val orderFuture = (issuer ? order).mapTo[Order]
 
       // Convert successful future to Json
-
-      ???
+      orderFuture.map { createdOrder =>
+        Ok(Json.toJson(SuccessResponse(createdOrder)))
+      }
     })
   }
 }
