@@ -50,7 +50,11 @@ object Orders extends Controller {
       val response = ErrorResponse(ErrorResponse.INVALID_JSON, errorMessage)
       Future.successful(BadRequest(Json.toJson(response)))
     }, { order =>
-      implicit val timeout = Timeout(5.seconds)
+      val timeoutKey = "ticketoverlords.timeouts.issuer"
+      val configuredTimeout = current.configuration.getInt(timeoutKey)
+      val resolvedTimeout = configuredTimeout.getOrElse(5)
+      implicit val timeout = Timeout(resolvedTimeout.seconds)
+      
       val orderFuture = (issuer ? order).mapTo[Order]
 
       // Convert successful future to Json
