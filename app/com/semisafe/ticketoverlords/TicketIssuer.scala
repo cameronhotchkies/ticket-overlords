@@ -23,6 +23,16 @@ class TicketIssuer extends Actor {
     }
   }
 
+  override def preStart = {
+    val ticketBlocksResult = TicketBlock.list
+
+    for {
+      ticketBlocks <- ticketBlocksResult
+      block <- ticketBlocks
+      id <- block.id
+    } createWorker(id)
+  }
+
   def placeOrder(order: Order) {
     // This is important!!
     val origin = sender
