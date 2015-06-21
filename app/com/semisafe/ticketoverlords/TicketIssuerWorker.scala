@@ -8,8 +8,6 @@ class OrderRoutingException(message: String) extends Exception(message)
 
 class TicketIssuerWorker(ticketBlockID: Long) extends Actor {
 
-  private var availability = 0
-
   override def preStart = {
     val availabilityFuture = TicketBlock.availability(ticketBlockID)
 
@@ -17,6 +15,59 @@ class TicketIssuerWorker(ticketBlockID: Long) extends Actor {
       case result => availability = result
     }
   }
+
+  def validateRouting(requestedID: Long) = {
+    if (ticketBlockID != requestedID) {
+
+      val msg = s"IssuerWorker #${ticketBlockID} recieved " +
+        s"an order for Ticket Block ${requestedID}"
+
+      sender ! ActorFailure(new OrderRoutingException(msg))
+      false
+    } else {
+      true
+    }
+  }
+
+  case class AddTickets(quantity: Int)
+
+  def initializing: Actor.Receive = {
+    case AddTickets(availability) => {
+      context.become(normalOperation(availability))
+    }
+    case order: Order => {
+      if (validateRouting(order.ticketBlockID)) {
+        val failureResponse = TicketBlockUnavailable(
+          order.ticketBlockID)
+
+        sender ! ActorFailure(failureResponse)
+      }
+    }
+  }
+
+  def normalOperation(availability: Int): Actor.Receive = {
+    case AddTickets(newQuantity) => {
+      context.become(normalOperation(availability + newQuantity))
+    }
+    case order: Order => placeOrder(order, availability)
+  }
+
+  def soldOut: Actor.Receive = {
+    case AddTickets(availability) => {
+      context.become(normalOperation(availability))
+    }
+    case order: Order => {
+      if (validateRouting(order.ticketBlockID)) {
+        val failureResponse = InsufficientTicketsAvailable(
+          order.ticketBlockID, 0)
+
+        sender ! ActorFailure(failureResponse)
+      }
+    }
+  }
+
+  // This replaces the previous definition of receive
+  def receive = initializing
 
   def placeOrder(order: Order) {
     val origin = sender
@@ -41,9 +92,5 @@ class TicketIssuerWorker(ticketBlockID: Long) extends Actor {
         origin ! ActorFailure(failureResponse)
       }
     }
-  }
-
-  def receive = {
-    case order: Order => placeOrder(order)
   }
 }
