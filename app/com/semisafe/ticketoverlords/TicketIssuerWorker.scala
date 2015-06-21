@@ -12,7 +12,7 @@ class TicketIssuerWorker(ticketBlockID: Long) extends Actor {
     val availabilityFuture = TicketBlock.availability(ticketBlockID)
 
     availabilityFuture.onSuccess {
-      case result => availability = result
+      case result => self ! AddTickets(result)
     }
   }
 
