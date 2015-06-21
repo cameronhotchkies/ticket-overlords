@@ -12,6 +12,9 @@ import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.Logger
 
+import akka.actor.ActorSelection
+import play.libs.Akka
+
 case class TicketBlock(
   id: Option[Long],
   eventID: Long,
@@ -30,7 +33,7 @@ object TicketBlock {
   import dbConfig.driver.api._
 
   class TicketBlocksTable(tag: Tag)
-    extends Table[TicketBlock](tag, "TICKET_BLOCKS") {
+      extends Table[TicketBlock](tag, "TICKET_BLOCKS") {
 
     def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
     def eventID = column[Long]("EVENT_ID")
@@ -65,13 +68,19 @@ object TicketBlock {
   def create(newTicketBlock: TicketBlock): Future[TicketBlock] = {
     val insertion = (table returning table.map(_.id)) += newTicketBlock
     db.run(insertion).map { resultID =>
-      newTicketBlock.copy(id = Option(resultID))
+      val createdBlock = newTicketBlock.copy(id = Option(resultID))
+
+      val issuer: ActorSelection =
+        Akka.system.actorSelection("/user/ticketIssuer")
+      issuer ! TicketBlockCreated(createdBlock)
+
+      createdBlock
     }
   }
 
   def availability(ticketBlockID: Long): Future[Int] = {
     db.run {
-    val query = sql"""
+      val query = sql"""
      select INITIAL_SIZE - COALESCE(SUM(TICKET_QUANTITY), 0)
      from TICKET_BLOCKS tb
      left join ORDERS o on o.TICKET_BLOCK_ID=tb.ID
@@ -79,7 +88,7 @@ object TicketBlock {
      group by INITIAL_SIZE;
      """.as[Int]
 
-     query.headOption
+      query.headOption
     }.map { _.getOrElse(0) }
   }
 }
