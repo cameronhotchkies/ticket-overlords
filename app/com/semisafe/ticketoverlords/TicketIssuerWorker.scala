@@ -69,20 +69,16 @@ class TicketIssuerWorker(ticketBlockID: Long) extends Actor {
   // This replaces the previous definition of receive
   def receive = initializing
 
-  def placeOrder(order: Order) {
+  def placeOrder(order: Order, availability: Int) {
     val origin = sender
 
-    if (ticketBlockID != order.ticketBlockID) {
-
-      val msg = s"IssuerWorker #${ticketBlockID} recieved " +
-        s"an order for Ticket Block ${order.ticketBlockID}"
-
-      origin ! ActorFailure(new OrderRoutingException(msg))
-
-    } else {
+    if (validateRouting(order.ticketBlockID)) {
       if (availability >= order.ticketQuantity) {
-        availability -= order.ticketQuantity
+        val newAvailability = availability - order.ticketQuantity
+        context.become(normalOperation(newAvailability))
+
         val createdOrder = Order.create(order)
+
         createdOrder.map(origin ! _)
       } else {
         val failureResponse = InsufficientTicketsAvailable(
