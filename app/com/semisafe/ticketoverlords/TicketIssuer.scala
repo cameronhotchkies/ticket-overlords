@@ -13,6 +13,8 @@ case class InsufficientTicketsAvailable(
 case class TicketBlockUnavailable(
   ticketBlockID: Long) extends Throwable
 
+case class TicketBlockCreated(ticketBlock: TicketBlock)
+
 class TicketIssuer extends Actor {
 
   var workers = Map[Long, ActorRef]()
@@ -47,6 +49,7 @@ class TicketIssuer extends Actor {
   }
 
   def receive = {
-    case order: Order => placeOrder(order)
+    case order: Order          => placeOrder(order)
+    case TicketBlockCreated(t) => t.id.foreach(createWorker)
   }
 }
