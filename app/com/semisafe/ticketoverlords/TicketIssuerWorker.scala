@@ -8,6 +8,16 @@ class OrderRoutingException(message: String) extends Exception(message)
 
 class TicketIssuerWorker(ticketBlockID: Long) extends Actor {
 
+  private var availability = 0
+
+  override def preStart = {
+    val availabilityFuture = TicketBlock.availability(ticketBlockID)
+
+    availabilityFuture.onSuccess {
+      case result => availability = result
+    }
+  }
+
   def placeOrder(order: Order) {
     val origin = sender
 
