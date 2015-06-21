@@ -23,10 +23,6 @@ import play.api.Logger
 
 object Orders extends Controller {
 
-  val issuer = Akka.system.actorOf(
-    Props[TicketIssuer],
-    name = "ticketIssuer")
-
   def list = Action.async { request =>
     val orders = Order.list
     orders.map { o =>
@@ -59,6 +55,7 @@ object Orders extends Controller {
       val resolvedTimeout = configuredTimeout.getOrElse(5)
       implicit val timeout = Timeout(resolvedTimeout.seconds)
 
+      val issuer = TicketIssuer.getSelection
       val orderFuture = (issuer ? order).mapTo[Order]
 
       // Convert successful future to Json

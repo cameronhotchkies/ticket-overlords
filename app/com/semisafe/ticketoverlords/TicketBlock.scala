@@ -70,8 +70,7 @@ object TicketBlock {
     db.run(insertion).map { resultID =>
       val createdBlock = newTicketBlock.copy(id = Option(resultID))
 
-      val issuer: ActorSelection =
-        Akka.system.actorSelection("/user/ticketIssuer")
+      val issuer = TicketIssuer.getSelection
       issuer ! TicketBlockCreated(createdBlock)
 
       createdBlock
