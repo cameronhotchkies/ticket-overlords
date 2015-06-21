@@ -29,21 +29,16 @@ class TicketIssuerWorker(ticketBlockID: Long) extends Actor {
       origin ! ActorFailure(new OrderRoutingException(msg))
 
     } else {
-      val availResult = TicketBlock.availability(ticketBlockID)
+      if (availability >= order.ticketQuantity) {
+        availability -= order.ticketQuantity
+        val createdOrder = Order.create(order)
+        createdOrder.map(origin ! _)
+      } else {
+        val failureResponse = InsufficientTicketsAvailable(
+          order.ticketBlockID,
+          availability)
 
-      availResult.map { availability =>
-        if (availability >= order.ticketQuantity) {
-          val createdOrder = Order.create(order)
-
-          createdOrder.map { origin ! _ }
-        } else {
-
-          val failureResponse = InsufficientTicketsAvailable(
-            order.ticketBlockID,
-            availability)
-
-          origin ! ActorFailure(failureResponse)
-        }
+        origin ! ActorFailure(failureResponse)
       }
     }
   }
