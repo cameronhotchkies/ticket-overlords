@@ -5,6 +5,8 @@ import akka.actor.Status.{ Failure => ActorFailure }
 import play.api.libs.concurrent.Execution.Implicits._
 import scala.concurrent.Future
 import akka.actor.{ ActorRef, Props }
+import play.api.libs.concurrent.Akka
+import play.api.Play.current
 
 case class InsufficientTicketsAvailable(
   ticketBlockID: Long,
@@ -53,3 +55,15 @@ class TicketIssuer extends Actor {
     case TicketBlockCreated(t) => t.id.foreach(createWorker)
   }
 }
+
+object TicketIssuer {
+
+  def props = Props[TicketIssuer]
+
+  private val reference = Akka.system.actorOf(
+    TicketIssuer.props,
+    name = "ticketIssuer")
+
+  def getSelection = Akka.system.actorSelection("/user/ticketIssuer")
+}
+
