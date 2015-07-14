@@ -8,6 +8,8 @@ import akka.actor.{ ActorRef, Props }
 import play.api.libs.concurrent.Akka
 import play.api.Play.current
 
+case class AvailabilityCheck(ticketBlockID: Long)
+
 case class InsufficientTicketsAvailable(
   ticketBlockID: Long,
   ticketsAvailable: Int) extends Throwable
