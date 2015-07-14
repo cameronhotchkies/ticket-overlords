@@ -3,28 +3,29 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
+GET     /                           		controllers.Application.index
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET     /assets/*file               		controllers.Assets.at(path="/public", file)
 
 # API route for available tickets
-GET     /tickets/available/         controllers.Tickets.ticketsAvailable
+GET     /tickets/available/         		controllers.Tickets.ticketsAvailable
 
 # Javascript Router
-GET     /jsr/                       controllers.Application.jsRoutes
+GET     /jsr/                       		controllers.Application.jsRoutes
 
 # Event Resource
-POST    /events/                    controllers.Events.create
-GET     /events/                    controllers.Events.list
-GET     /events/:eventID/           controllers.Events.getByID(eventID: Long)
+POST    /events/                    		controllers.Events.create
+GET     /events/                    		controllers.Events.list
+GET     /events/:eventID/           		controllers.Events.getByID(eventID: Long)
+GET  	/events/:eventID/tickets/blocks/	controllers.Events.ticketBlocksForEvent(eventID: Long)
 
 # Ticket Block Resource
-POST    /tickets/blocks/            controllers.TicketBlocks.create
-GET     /tickets/blocks/            controllers.TicketBlocks.list
-GET     /tickets/blocks/:blockID/   controllers.TicketBlocks.getByID(blockID: Long)
+POST    /tickets/blocks/            		controllers.TicketBlocks.create
+GET     /tickets/blocks/            		controllers.TicketBlocks.list
+GET     /tickets/blocks/:blockID/   		controllers.TicketBlocks.getByID(blockID: Long)
 
 # Order Resource
-POST    /orders/              		controllers.Orders.create
-GET     /orders/              		controllers.Orders.list
-GET     /orders/:orderID/     		controllers.Orders.getByID(orderID: Long)
+POST    /orders/              				controllers.Orders.create
+GET     /orders/              				controllers.Orders.list
+GET     /orders/:orderID/     				controllers.Orders.getByID(orderID: Long)
