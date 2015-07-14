@@ -4,6 +4,9 @@ import play.api.mvc._
 import play.api.libs.json.Json
 import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
+import akka.util.Timeout
+import play.api.Play.current
+import scala.concurrent.duration._
 
 import com.semisafe.ticketoverlords.Event
 import com.semisafe.ticketoverlords.TicketBlock
@@ -58,6 +61,11 @@ object Events extends Controller {
         Future.successful(
           NotFound(Json.toJson(ErrorResponse(NOT_FOUND, "No event found"))))
       } { e =>
+        val timeoutKey = "ticketoverlords.timeouts.ticket_availability_ms"
+        val configuredTimeout = current.configuration.getInt(timeoutKey)
+        val resolvedTimeout = configuredTimeout.getOrElse(400)
+        implicit val timeout = Timeout(resolvedTimeout.milliseconds)
+
         val ticketBlocks: Future[Seq[TicketBlock]] = e.ticketBlocksWithAvailability
         ticketBlocks.map { tb =>
           Ok(Json.toJson(SuccessResponse(tb)))
