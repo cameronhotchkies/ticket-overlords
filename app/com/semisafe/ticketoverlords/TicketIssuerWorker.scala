@@ -43,13 +43,18 @@ class TicketIssuerWorker(ticketBlockID: Long) extends Actor {
         sender ! ActorFailure(failureResponse)
       }
     }
+    case AvailabilityCheck(ticketBlockID) => {
+      val failureResponse = TicketBlockUnavailable(ticketBlockID)
+      sender ! ActorFailure(failureResponse)
+    }
   }
 
   def normalOperation(availability: Int): Actor.Receive = {
     case AddTickets(newQuantity) => {
       context.become(normalOperation(availability + newQuantity))
     }
-    case order: Order => placeOrder(order, availability)
+    case order: Order         => placeOrder(order, availability)
+    case _: AvailabilityCheck => sender ! availability
   }
 
   def soldOut: Actor.Receive = {
@@ -64,6 +69,7 @@ class TicketIssuerWorker(ticketBlockID: Long) extends Actor {
         sender ! ActorFailure(failureResponse)
       }
     }
+    case _: AvailabilityCheck => sender ! 0
   }
 
   // This replaces the previous definition of receive
