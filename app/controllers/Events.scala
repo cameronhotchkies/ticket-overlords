@@ -6,6 +6,7 @@ import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
 
 import com.semisafe.ticketoverlords.Event
+import com.semisafe.ticketoverlords.TicketBlock
 import controllers.responses._
 
 object Events extends Controller {
@@ -47,6 +48,22 @@ object Events extends Controller {
       }
 
     })
+  }
+
+  def ticketBlocksForEvent(eventID: Long) = Action.async { request =>
+    val eventFuture = Event.getByID(eventID)
+
+    eventFuture.flatMap { event =>
+      event.fold {
+        Future.successful(
+          NotFound(Json.toJson(ErrorResponse(NOT_FOUND, "No event found"))))
+      } { e =>
+        val ticketBlocks: Future[Seq[TicketBlock]] = e.ticketBlocksWithAvailability
+        ticketBlocks.map { tb =>
+          Ok(Json.toJson(SuccessResponse(tb)))
+        }
+      }
+    }
   }
 }
 
