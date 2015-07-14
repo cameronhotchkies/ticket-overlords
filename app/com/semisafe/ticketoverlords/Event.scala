@@ -45,8 +45,9 @@ case class Event(
             }
           } yield updatedBlock
 
-          // Transform Seq[Future[...]] to Future[Seq[...]]
-          Future.sequence(updatedBlocks)
+          // Transform Seq[Future[...]] to Future[Seq[...]] while filtering
+          // any failures
+          OptimisticFuture.sequence(updatedBlocks)
         }
 
       blocksWithAvailability
