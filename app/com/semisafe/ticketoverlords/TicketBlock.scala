@@ -23,7 +23,8 @@ case class TicketBlock(
   price: BigDecimal,
   initialSize: Int,
   saleStart: DateTime,
-  saleEnd: DateTime)
+  saleEnd: DateTime,
+  availability: Option[Int] = None)
 
 object TicketBlock {
   implicit val format: Format[TicketBlock] = Json.format[TicketBlock]
@@ -47,7 +48,7 @@ object TicketBlock {
     def event = foreignKey("TB_EVENT", eventID, Event.table)(_.id)
 
     def * = (id.?, eventID, name, productCode, price, initialSize,
-      saleStart, saleEnd) <>
+      saleStart, saleEnd, None) <>
       ((TicketBlock.apply _).tupled, TicketBlock.unapply)
   }
 
