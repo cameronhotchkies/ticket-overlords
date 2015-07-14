@@ -58,6 +58,13 @@ object TicketBlock {
     db.run(blockList)
   }
 
+  def listForEvent(eventID: Long): Future[Seq[TicketBlock]] = {
+    val blockList = table.filter { tb =>
+      tb.eventID === eventID
+    }.result
+    db.run(blockList)
+  }
+
   def getByID(blockID: Long): Future[Option[TicketBlock]] = {
     val blockByID = table.filter { f =>
       f.id === blockID

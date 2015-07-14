@@ -13,14 +13,25 @@ import play.api.libs.concurrent.Execution.Implicits._
 import SlickMapping.jodaDateTimeMapping
 
 case class Event(
-  id: Option[Long],
-  name: String,
-  start: DateTime,
-  end: DateTime,
-  address: String,
-  city: String,
-  state: String,
-  country: String)
+    id: Option[Long],
+    name: String,
+    start: DateTime,
+    end: DateTime,
+    address: String,
+    city: String,
+    state: String,
+    country: String) {
+
+  def ticketBlocksWithAvailability(): Future[Seq[TicketBlock]] = {
+    this.id.fold {
+      Future.successful(Nil: Seq[TicketBlock])
+    } { eid =>
+      val basicBlocks = TicketBlock.listForEvent(eid)
+
+      basicBlocks
+    }
+  }
+}
 
 object Event {
   implicit val format: Format[Event] = Json.format[Event]
