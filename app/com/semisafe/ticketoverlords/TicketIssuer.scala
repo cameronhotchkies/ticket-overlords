@@ -54,7 +54,18 @@ class TicketIssuer extends Actor {
 
   def receive = {
     case order: Order          => placeOrder(order)
+    case a: AvailabilityCheck  => checkAvailability(a)
     case TicketBlockCreated(t) => t.id.foreach(createWorker)
+  }
+
+  def checkAvailability(message: AvailabilityCheck) = {
+    val workerRef = workers.get(message.ticketBlockID)
+
+    workerRef.fold {
+      sender ! ActorFailure(TicketBlockUnavailable(message.ticketBlockID))
+    } { worker =>
+      worker forward message
+    }
   }
 }
 
