@@ -9,6 +9,8 @@ import play.api.Play.current
 import play.api.db.DBApi
 import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
+import akka.util.Timeout
+import akka.pattern.ask
 
 import SlickMapping.jodaDateTimeMapping
 
@@ -22,13 +24,32 @@ case class Event(
     state: String,
     country: String) {
 
-  def ticketBlocksWithAvailability(): Future[Seq[TicketBlock]] = {
+  def ticketBlocksWithAvailability(implicit timeout: Timeout): Future[Seq[TicketBlock]] = {
     this.id.fold {
       Future.successful(Nil: Seq[TicketBlock])
     } { eid =>
-      val basicBlocks = TicketBlock.listForEvent(eid)
 
-      basicBlocks
+      val basicBlocks = TicketBlock.listForEvent(eid)
+      val issuer = TicketIssuer.getSelection
+      val blocksWithAvailability: Future[Seq[TicketBlock]] =
+        basicBlocks.flatMap { blocks =>
+          val updatedBlocks: Seq[Future[TicketBlock]] = for {
+            block <- blocks
+            blockID <- block.id
+            availabilityRaw = issuer ? AvailabilityCheck(blockID)
+
+            availability = availabilityRaw.mapTo[Int]
+
+            updatedBlock = availability.map { a =>
+              block.copy(availability = Option(a))
+            }
+          } yield updatedBlock
+
+          // Transform Seq[Future[...]] to Future[Seq[...]]
+          Future.sequence(updatedBlocks)
+        }
+
+      blocksWithAvailability
     }
   }
 }
