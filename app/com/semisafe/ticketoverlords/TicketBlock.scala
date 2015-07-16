@@ -48,8 +48,15 @@ object TicketBlock {
     def event = foreignKey("TB_EVENT", eventID, Event.table)(_.id)
 
     def * = (id.?, eventID, name, productCode, price, initialSize,
-      saleStart, saleEnd, None) <>
-      ((TicketBlock.apply _).tupled, TicketBlock.unapply)
+      saleStart, saleEnd) <>
+      (
+        (TicketBlock.apply(_: Option[Long], _: Long, _: String, _: String,
+          _: BigDecimal, _: Int, _: DateTime, _: DateTime,
+          None)).tupled, { tb: TicketBlock =>
+            TicketBlock.unapply(tb).map {
+              case (a, b, c, d, e, f, g, h, _) => (a, b, c, d, e, f, g, h)
+            }
+          })
   }
 
   val table = TableQuery[TicketBlocksTable]
