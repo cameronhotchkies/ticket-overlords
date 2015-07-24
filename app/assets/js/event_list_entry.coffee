@@ -44,6 +44,7 @@ define [
                           priceFormat = parseFloat(Math.round(tb.price * 100) / 100).toFixed(2)
                           option {
                               key: tb.id
+                              ref: "selectedTicketBlock"
                               value: tb.id
                           }, "#{ tb.name } - $#{ priceFormat }"
                           
@@ -66,6 +67,7 @@ define [
                               }, "Quantity:"
                               input {
                                   key: 'qty'
+                                  ref: "ticketQuantity"
                                   id: "qty#{eid}"
                                   type: "number"
                                   max: 9999
@@ -81,6 +83,7 @@ define [
                               }, "Name:"
                               input {
                                   key: 'name'
+                                  ref: "customerName"
                                   id: "name#{eid}"
                               }
                               
@@ -90,6 +93,7 @@ define [
                               }, "Email:"
                               input {
                                   key: 'email'
+                                  ref: "customerEmail"
                                   id: "email#{eid}"
                               }
                               button {
