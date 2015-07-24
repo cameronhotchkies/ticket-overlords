@@ -1,4 +1,4 @@
-@(title: String)(content: Html)
+@(title: String, requireJsModule: String)(content: Html)
 
 <!DOCTYPE html>
 
@@ -9,7 +9,7 @@
         <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
     	<script type="text/javascript" src="@routes.Application.jsRoutes"></script>
     	@helper.requireJs(core = routes.Assets.at("lib/requirejs/require.js").url,
-                          module = routes.Assets.at("some_module").url)
+                          module = routes.Assets.at(s"js/$requireJsModule").url)
     </head>
     <body>
         @content
