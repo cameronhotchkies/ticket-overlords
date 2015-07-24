@@ -1,7 +1,8 @@
 define [
   'react'
   'jquery'
-  ], (React, jQuery) ->
+  'event_list_entry'
+  ], (React, jQuery, EventListEntry) ->
 
     EventList = React.createClass
         getInitialState: ->
@@ -26,7 +27,17 @@ define [
         render: ->
             { div } = React.DOM
             if @state.hasLoaded
-                div {}, JSON.stringify @state.events
+                eventListEntry = React.createFactory EventListEntry
+                
+                entries = @state.events.map (event) ->
+                    eventListEntry
+                        key: event.id
+                        event: event
+                
+                div {
+                    key: 'el'
+                    className: 'eventEntries'
+                },  entries
             else
                 div {}
 
