@@ -9,7 +9,8 @@ require.config
 # Define the requirements for this code block
 require [
     'react'
-    ], (React) ->
+    'event_list'
+    ], (React, EventList) ->
 
     # Local reference to the React.DOM version of a div
     { div } = React.DOM
@@ -18,9 +19,9 @@ require [
     MasterView = React.createClass
         # Define the html / children components
         render: ->
-            div { key: 'top' }, [
-                div { key: 'mid' }, ["Placeholder"]
-            ]
+            eventList = React.createFactory EventList
+            div { key: 'top' },
+                eventList { key: 'events' }, null
 
     # Instantiate a MasterView element
     masterView = React.createElement MasterView, null
