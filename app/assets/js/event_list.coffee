@@ -24,6 +24,10 @@ define [
                         hasLoaded: true
 
         render: ->
-            # TODO
+            { div } = React.DOM
+            if @state.hasLoaded
+                div {}, JSON.stringify @state.events
+            else
+                div {}
 
     EventList
