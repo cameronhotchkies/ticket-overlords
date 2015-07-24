@@ -1,0 +1,55 @@
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:300);
+
+body {
+  background: #1e5ea8;
+  font-family: 'Open Sans', sans-serif;
+}
+
+div.eventEntries {
+  display: table;
+  background: #ffffff;
+  padding: 10px;
+  border: 4px solid #1e5ea8;
+  border-radius: 15px;
+}
+
+div.eventEntries > div {
+  display: table-row-group;
+  border: 2px solid #838383;
+  padding: 4px;
+}
+
+.eventEntry {
+  display: table-row;
+  border: 2px solid #838383;
+}
+
+.eventEntry > span {
+  display: table-cell;
+  padding: .25em;
+}
+
+.orderPanel {
+  padding: 10px;
+  border: 4px solid #1e5ea8;
+  border-radius: 15px;
+  background-color: white;
+  color: black;
+}
+
+.orderPanel label, .orderPanel input, .orderpanel div {
+  padding: .25em;
+  margin: .25em;
+}
+
+button {
+  height: 2em;
+  border-radius: 15px;
+  background-color: white;
+  color: #ffffff;
+  background-color: #1e5ea8;
+}
+
+input {
+  border-radius: 5px;
+}
