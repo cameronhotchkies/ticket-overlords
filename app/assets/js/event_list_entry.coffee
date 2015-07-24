@@ -33,8 +33,43 @@ define [
                 expanded: !@state.expanded
         
         placeOrder: ->
-            # TODO
-        
+            ticketBlockID = @refs.selectedTicketBlock.getDOMNode().value
+            ticketQuantity = @refs.ticketQuantity.getDOMNode().value
+            customerName = @refs.customerName.getDOMNode().value
+            customerEmail = @refs.customerEmail.getDOMNode().value
+            
+            # This is pretty lame validation, but better than nothing
+            if customerName.length == 0
+                alert "Your name is required"
+                return
+                
+            if customerEmail.length == 0
+                alert "Your email is required"
+                return
+                
+            order =
+                ticketBlockID: Number(ticketBlockID)
+                customerName: customerName
+                customerEmail: customerEmail
+                ticketQuantity: Number(ticketQuantity)
+                
+            ticketBlocksApi = jsRoutes.controllers.Orders.create()
+            ticketBlocksApi.ajax(
+                data: JSON.stringify order
+                contentType: 'application/json'
+            )
+            .done (result) =>
+                if @isMounted()
+                    alert "Order placed. REF #{result.response.id}"
+                    @setState
+                        expanded: false
+                        
+            .fail (jqXHR, textStatus, errorThrown) =>
+                resultCode = jqXHR.status
+                result = jqXHR.responseJSON
+                if @isMounted()
+                    alert "Error placing the order: #{result.error.message}"
+                        
         renderEntryBlocks: ->
             { div, span, option, label, select, input, button } = React.DOM
             eid = @props.event.id
