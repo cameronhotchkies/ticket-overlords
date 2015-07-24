@@ -13,7 +13,9 @@ object Application extends Controller {
   def jsRoutes = Action { implicit request =>
     Ok(
       JavaScriptReverseRouter("jsRoutes")(
-        routes.javascript.Tickets.ticketsAvailable
+        routes.javascript.Events.list,
+        routes.javascript.Events.ticketBlocksForEvent,
+        routes.javascript.Orders.create
       )
     )
   }
