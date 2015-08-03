@@ -32,6 +32,13 @@ define [
             @setState
                 expanded: !@state.expanded
         
+        getCookie: (name) ->
+            document.cookie.split(';').filter( (c) ->
+                c.trim().startsWith("#{ name }=")
+            ).map( (c) ->
+                c.split('=')[1]
+            )
+
         placeOrder: ->
             ticketBlockID = @refs.selectedTicketBlock.getDOMNode().value
             ticketQuantity = @refs.ticketQuantity.getDOMNode().value
@@ -52,11 +59,15 @@ define [
                 customerName: customerName
                 customerEmail: customerEmail
                 ticketQuantity: Number(ticketQuantity)
+
+            csrfToken = @getCookie("CSRF-Token")
                 
             ticketBlocksApi = jsRoutes.controllers.Orders.create()
             ticketBlocksApi.ajax(
                 data: JSON.stringify order
                 contentType: 'application/json'
+                headers:
+                    "X-CSRF-Token": csrfToken
             )
             .done (result) =>
                 if @isMounted()
