@@ -10,6 +10,7 @@ libraryDependencies ++= Seq(
   specs2 % Test,
   cache,
   ws,
+  filters,
   "org.webjars" % "jquery" % "2.1.4",
   "com.typesafe.play" %% "play-slick-evolutions" % "1.0.0",
   "com.h2database" % "h2" % "1.4.187",
