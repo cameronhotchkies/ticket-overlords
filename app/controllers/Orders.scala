@@ -21,6 +21,8 @@ import com.semisafe.ticketoverlords.InsufficientTicketsAvailable
 import com.semisafe.ticketoverlords.TicketBlockUnavailable
 import play.api.Logger
 
+import play.filters.csrf._
+
 object Orders extends Controller {
 
   def list = Action.async { request =>
@@ -42,56 +44,58 @@ object Orders extends Controller {
     }
   }
 
-  def create = Action.async(parse.json) { request =>
-    val incomingBody = request.body.validate[Order]
+  def create = CSRFCheck {
+    Action.async(parse.json) { request =>
+      val incomingBody = request.body.validate[Order]
 
-    incomingBody.fold(error => {
-      val errorMessage = s"Invalid JSON: ${error}"
-      val response = ErrorResponse(ErrorResponse.INVALID_JSON, errorMessage)
-      Future.successful(BadRequest(Json.toJson(response)))
-    }, { order =>
-      val timeoutKey = "ticketoverlords.timeouts.issuer"
-      val configuredTimeout = current.configuration.getInt(timeoutKey)
-      val resolvedTimeout = configuredTimeout.getOrElse(5)
-      implicit val timeout = Timeout(resolvedTimeout.seconds)
+      incomingBody.fold(error => {
+        val errorMessage = s"Invalid JSON: ${error}"
+        val response = ErrorResponse(ErrorResponse.INVALID_JSON, errorMessage)
+        Future.successful(BadRequest(Json.toJson(response)))
+      }, { order =>
+        val timeoutKey = "ticketoverlords.timeouts.issuer"
+        val configuredTimeout = current.configuration.getInt(timeoutKey)
+        val resolvedTimeout = configuredTimeout.getOrElse(5)
+        implicit val timeout = Timeout(resolvedTimeout.seconds)
 
-      val issuer = TicketIssuer.getSelection
-      val orderFuture = (issuer ? order).mapTo[Order]
+        val issuer = TicketIssuer.getSelection
+        val orderFuture = (issuer ? order).mapTo[Order]
 
-      // Convert successful future to Json
-      orderFuture.map { createdOrder =>
-        Ok(Json.toJson(SuccessResponse(createdOrder)))
-      }.recover({
-        case ita: InsufficientTicketsAvailable => {
-          val responseMessage =
-            "There are not enough tickets remaining to complete this order." +
-              s" Quantity Remaining: ${ita.ticketsAvailable}"
+        // Convert successful future to Json
+        orderFuture.map { createdOrder =>
+          Ok(Json.toJson(SuccessResponse(createdOrder)))
+        }.recover({
+          case ita: InsufficientTicketsAvailable => {
+            val responseMessage =
+              "There are not enough tickets remaining to complete this order." +
+                s" Quantity Remaining: ${ita.ticketsAvailable}"
 
-          val response = ErrorResponse(
-            ErrorResponse.NOT_ENOUGH_TICKETS,
-            responseMessage)
+            val response = ErrorResponse(
+              ErrorResponse.NOT_ENOUGH_TICKETS,
+              responseMessage)
 
-          BadRequest(Json.toJson(response))
-        }
-        case tba: TicketBlockUnavailable => {
-          val responseMessage =
-            s"Ticket Block ${order.ticketBlockID} is not available."
-          val response = ErrorResponse(
-            ErrorResponse.TICKET_BLOCK_UNAVAILABLE,
-            responseMessage)
+            BadRequest(Json.toJson(response))
+          }
+          case tba: TicketBlockUnavailable => {
+            val responseMessage =
+              s"Ticket Block ${order.ticketBlockID} is not available."
+            val response = ErrorResponse(
+              ErrorResponse.TICKET_BLOCK_UNAVAILABLE,
+              responseMessage)
 
-          BadRequest(Json.toJson(response))
-        }
-        case unexpected => {
-          Logger.error(
-            s"Unexpected error while placing an order: ${unexpected.toString}")
-          val response = ErrorResponse(
-            INTERNAL_SERVER_ERROR,
-            "An unexpected error occurred")
+            BadRequest(Json.toJson(response))
+          }
+          case unexpected => {
+            Logger.error(
+              s"Unexpected error while placing an order: ${unexpected.toString}")
+            val response = ErrorResponse(
+              INTERNAL_SERVER_ERROR,
+              "An unexpected error occurred")
 
-          InternalServerError(Json.toJson(response))
-        }
+            InternalServerError(Json.toJson(response))
+          }
+        })
       })
-    })
+    }
   }
 }
