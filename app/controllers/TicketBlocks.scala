@@ -1,17 +1,18 @@
 package controllers
 
+import javax.inject.Inject
+
 import play.api.mvc._
 import play.api.libs.json.Json
 
 import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
-
-import com.semisafe.ticketoverlords.TicketBlock
+import com.semisafe.ticketoverlords.{TicketBlock, TicketBlockDao}
 import controllers.responses._
 
-object TicketBlocks extends Controller {
+class TicketBlocks @Inject()(ticketBlockDao: TicketBlockDao) extends Controller {
   def list = Action.async { request =>
-    val ticketBlocks: Future[Seq[TicketBlock]] = TicketBlock.list
+    val ticketBlocks: Future[Seq[TicketBlock]] = ticketBlockDao.list
 
     ticketBlocks.map { tbs =>
       Ok(Json.toJson(SuccessResponse(tbs)))
@@ -19,7 +20,7 @@ object TicketBlocks extends Controller {
   }
 
   def getByID(ticketBlockID: Long) = Action.async { request =>
-    val ticketBlockFuture: Future[Option[TicketBlock]] = TicketBlock.getByID(ticketBlockID)
+    val ticketBlockFuture: Future[Option[TicketBlock]] = ticketBlockDao.getByID(ticketBlockID)
 
     ticketBlockFuture.map { ticketBlock =>
       ticketBlock.fold {
@@ -39,7 +40,7 @@ object TicketBlocks extends Controller {
       Future.successful(BadRequest(Json.toJson(response)))
     }, { ticketBlock =>
       // save ticket block and get a copy back
-      val createdBlock: Future[TicketBlock] = TicketBlock.create(ticketBlock)
+      val createdBlock: Future[TicketBlock] = ticketBlockDao.create(ticketBlock)
 
       createdBlock.map { cb =>
         Created(Json.toJson(SuccessResponse(cb)))

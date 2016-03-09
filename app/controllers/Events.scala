@@ -1,20 +1,27 @@
 package controllers
 
+import javax.inject.Inject
+
+import akka.actor.ActorSystem
 import play.api.mvc._
 import play.api.libs.json.Json
+
 import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
 import akka.util.Timeout
-import play.api.Play.current
+
 import scala.concurrent.duration._
-
 import com.semisafe.ticketoverlords.Event
-import com.semisafe.ticketoverlords.TicketBlock
+import com.semisafe.ticketoverlords.{EventDao, TicketBlock, TicketBlockDao}
 import controllers.responses._
+import play.api.Configuration
 
-object Events extends Controller {
+class Events @Inject()(configuration: Configuration,
+                       actorSystem: ActorSystem,
+                       eventDao:EventDao,
+                       ticketBlockDao: TicketBlockDao) extends Controller {
   def list = Action.async { request =>
-    val eventFuture: Future[Seq[Event]] = Event.list
+    val eventFuture: Future[Seq[Event]] = eventDao.list
 
     val response = eventFuture.map { events =>
       Ok(Json.toJson(SuccessResponse(events)))
@@ -24,7 +31,7 @@ object Events extends Controller {
   }
 
   def getByID(eventID: Long) = Action.async { request =>
-    val eventFuture: Future[Option[Event]] = Event.getByID(eventID)
+    val eventFuture: Future[Option[Event]] = eventDao.getByID(eventID)
 
     eventFuture.map { event =>
       event.fold {
@@ -44,7 +51,7 @@ object Events extends Controller {
       Future.successful(BadRequest(Json.toJson(response)))
     }, { event =>
       // save event and get a copy back
-      val createdEventFuture: Future[Event] = Event.create(event)
+      val createdEventFuture: Future[Event] = eventDao.create(event)
 
       createdEventFuture.map { createdEvent =>
         Created(Json.toJson(SuccessResponse(createdEvent)))
@@ -54,7 +61,7 @@ object Events extends Controller {
   }
 
   def ticketBlocksForEvent(eventID: Long) = Action.async { request =>
-    val eventFuture = Event.getByID(eventID)
+    val eventFuture = eventDao.getByID(eventID)
 
     eventFuture.flatMap { event =>
       event.fold {
@@ -62,9 +69,11 @@ object Events extends Controller {
           NotFound(Json.toJson(ErrorResponse(NOT_FOUND, "No event found"))))
       } { e =>
         val timeoutKey = "ticketoverlords.timeouts.ticket_availability_ms"
-        val configuredTimeout = current.configuration.getInt(timeoutKey)
+        val configuredTimeout = configuration.getInt(timeoutKey)
         val resolvedTimeout = configuredTimeout.getOrElse(400)
         implicit val timeout = Timeout(resolvedTimeout.milliseconds)
+        implicit val blockData = ticketBlockDao
+        implicit val as = actorSystem
 
         val ticketBlocks: Future[Seq[TicketBlock]] = e.ticketBlocksWithAvailability
         ticketBlocks.map { tb =>
