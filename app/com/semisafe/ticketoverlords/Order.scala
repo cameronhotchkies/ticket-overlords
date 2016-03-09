@@ -1,14 +1,14 @@
 package com.semisafe.ticketoverlords
 
+import javax.inject.Inject
+
 import org.joda.time.DateTime
-import play.api.libs.json.{ Json, Format }
-import play.api.db.slick.DatabaseConfigProvider
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
+import play.api.libs.json.{Format, Json}
 import slick.driver.JdbcProfile
-import play.api.Play.current
-import play.api.db.DBApi
-import SlickMapping.jodaDateTimeMapping
-import scala.concurrent.Future
-import play.api.libs.concurrent.Execution.Implicits._
+
+import scala.concurrent.{ExecutionContext, Future}
+import slick.backend.DatabaseConfig
 
 case class Order(id: Option[Long],
                  ticketBlockID: Long,
@@ -19,10 +19,12 @@ case class Order(id: Option[Long],
 
 object Order {
   implicit val format: Format[Order] = Json.format[Order]
+}
 
-  protected val dbConfig = DatabaseConfigProvider.get[JdbcProfile](current)
-  import dbConfig._
-  import dbConfig.driver.api._
+@javax.inject.Singleton
+class OrderDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider,
+                         protected val ticketBlockDao: TicketBlockDao) extends SlickMapping {
+  import driver.api._
 
   class OrdersTable(tag: Tag) extends Table[Order](tag, "ORDERS") {
 
@@ -33,7 +35,7 @@ object Order {
     def ticketQuantity = column[Int]("TICKET_QUANTITY")
     def timestamp = column[DateTime]("TIMESTAMP")
 
-    def ticketBlock = foreignKey("O_TICKETBLOCK", ticketBlockID, TicketBlock.table)(_.id)
+    def ticketBlock = foreignKey("O_TICKETBLOCK", ticketBlockID, ticketBlockDao.table)(_.id)
 
     def * = (id.?, ticketBlockID, customerName, customerEmail, ticketQuantity, timestamp.?) <>
       ((Order.apply _).tupled, Order.unapply)
@@ -53,7 +55,7 @@ object Order {
     }
   }
 
-  def create(newOrder: Order): Future[Order] = {
+  def create(newOrder: Order)(implicit ec: ExecutionContext): Future[Order] = {
     val nowStamp = new DateTime()
     val withTimestamp = newOrder.copy(timestamp = Option(nowStamp))
 

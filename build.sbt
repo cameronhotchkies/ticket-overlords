@@ -4,7 +4,7 @@ version := "1.0-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq(
   specs2 % Test,
@@ -12,9 +12,9 @@ libraryDependencies ++= Seq(
   ws,
   filters,
   "org.webjars" % "jquery" % "2.1.4",
-  "com.typesafe.play" %% "play-slick-evolutions" % "1.0.0",
+  "com.typesafe.play" %% "play-slick-evolutions" % "1.1.1",
   "com.h2database" % "h2" % "1.4.187",
-  "com.typesafe.play" %% "play-slick" % "1.0.0",
+  "com.typesafe.play" %% "play-slick" % "1.1.1",
   "org.webjars" % "requirejs" % "2.1.18",
   "org.webjars" % "react" % "0.13.3"
 )

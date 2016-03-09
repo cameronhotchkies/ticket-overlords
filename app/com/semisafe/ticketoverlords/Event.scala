@@ -1,18 +1,17 @@
 package com.semisafe.ticketoverlords
 
-import org.joda.time.DateTime
-import play.api.libs.json.{ Json, Format }
+import javax.inject.Inject
 
-import play.api.db.slick.DatabaseConfigProvider
-import slick.driver.JdbcProfile
-import play.api.Play.current
-import play.api.db.DBApi
-import scala.concurrent.Future
-import play.api.libs.concurrent.Execution.Implicits._
-import akka.util.Timeout
+import akka.actor.ActorSystem
 import akka.pattern.ask
+import akka.util.Timeout
+import org.joda.time.DateTime
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
+import play.api.libs.json.{Format, Json}
+import slick.backend.DatabaseConfig
+import slick.driver.JdbcProfile
 
-import SlickMapping.jodaDateTimeMapping
+import scala.concurrent.{ExecutionContext, Future}
 
 case class Event(
     id: Option[Long],
@@ -24,12 +23,15 @@ case class Event(
     state: String,
     country: String) {
 
-  def ticketBlocksWithAvailability(implicit timeout: Timeout): Future[Seq[TicketBlock]] = {
+  def ticketBlocksWithAvailability(implicit timeout: Timeout,
+                                   ticketBlockDao: TicketBlockDao,
+                                   system: ActorSystem,
+                                   ec: ExecutionContext): Future[Seq[TicketBlock]] = {
     this.id.fold {
       Future.successful(Nil: Seq[TicketBlock])
     } { eid =>
 
-      val basicBlocks = TicketBlock.listForEvent(eid)
+      val basicBlocks = ticketBlockDao.listForEvent(eid)
       val issuer = TicketIssuer.getSelection
       val blocksWithAvailability: Future[Seq[TicketBlock]] =
         basicBlocks.flatMap { blocks =>
@@ -57,9 +59,11 @@ case class Event(
 
 object Event {
   implicit val format: Format[Event] = Json.format[Event]
+}
 
-  protected val dbConfig = DatabaseConfigProvider.get[JdbcProfile](current)
-  import dbConfig._
+@javax.inject.Singleton
+class EventDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) extends SlickMapping {
+
   import dbConfig.driver.api._
 
   class EventsTable(tag: Tag) extends Table[Event](tag, "EVENTS") {
@@ -92,7 +96,7 @@ object Event {
     db.run(eventByID)
   }
 
-  def create(newEvent: Event): Future[Event] = {
+  def create(newEvent: Event)(implicit ec: ExecutionContext): Future[Event] = {
     val insertion = (table returning table.map(_.id)) += newEvent
 
     val insertedIDFuture = db.run(insertion)

@@ -3,7 +3,7 @@ package controllers
 import play.api.mvc._
 import play.api.libs.json.Json
 
-object Tickets extends Controller {
+class Tickets extends Controller {
 
   case class AvailabilityResponse(result: String, ticketQuantity: Option[Long])
   object AvailabilityResponse {
